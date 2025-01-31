@@ -169,10 +169,7 @@ int predictClass (struct Animal dataZoo [NUM_SAMPLES], int newSample [NUM_FEATUR
     return predictedClass;
 }
 
-float findAccuracy(struct Animal dataZoo[NUM_SAMPLES], 
-                   struct Animal testData[NUM_TEST_DATA], 
-                   int whichDistanceFunction, 
-                   int k) {
+float findAccuracy(struct Animal dataZoo[NUM_SAMPLES],int whichDistanceFunction, struct Animal testData[NUM_TEST_DATA], int k) {
     int correctPredictions = 0;
 
     // Loop through each test sample
