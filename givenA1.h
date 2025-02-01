@@ -10,13 +10,13 @@
 #define NUM_TEST_DATA 20     // total number of samples / rows in the test dataset - you need this for task 9
 #define MAX_LENGTH_ANIMAL_NAME 50
 
-struct Animal {
+typedef struct Animal{
    
    char animalName [MAX_LENGTH_ANIMAL_NAME];
    int features [NUM_FEATURES];
    int classLabel;
    
-};
+}Animal;
 
 /* Task 1 */
 int readFromFile (char fName [30], struct Animal dataZoo [NUM_SAMPLES]) ;

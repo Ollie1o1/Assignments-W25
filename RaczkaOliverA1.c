@@ -1,6 +1,6 @@
 #include "givenA1.h"
 
-int readFromFile (char fName [30],struct Animal dataZoo [NUM_SAMPLES]){
+int readFromFile (char fName [30], struct Animal dataZoo [NUM_SAMPLES]){
 
     FILE *file = fopen(fName, "r");
     if (!file) {
