@@ -11,8 +11,6 @@ int k = 5; // Default number of nearest neighbors
 
 int main() {
     int input;
-    int predictedClass;
-    float accuracy;
 
     while (1) { // Keep the menu running until user exits
         printf("\nHere is the menu - enter a number between 1 and 5\n");
@@ -101,21 +99,42 @@ int main() {
 
             case 4: {
                 if (!dataLoaded) {
-                    printf("Error: No data loaded. Please read from file first.\n");
-                    break;
+                printf("Error: No data loaded. Please read from file first.\n");
+                break;
                 }
-                predictedClass = predictClass(dataZoo, testData[0].features, 1, k);
-                printf("The predicted class is: %d\n", predictedClass);
+                int newSample[NUM_FEATURES] = {1,1,1,0,1,0,1,1,1,0,0,0,0,1,1,1};
+    
+                // Predict class using Euclidean Distance
+                int predictedClassEuclidean = predictClass(dataZoo, newSample, 1, k);
+                printf("Predicted class for new sample with Euclidean Distance: %d\n", predictedClassEuclidean);
+
+                // Predict class using Hamming Distance
+                int predictedClassHamming = predictClass(dataZoo, newSample, 2, k);
+                printf("Predicted class for new sample with Hamming Distance: %d\n", predictedClassHamming);
+
+                // Predict class using Jaccard Similarity
+                int predictedClassJaccard = predictClass(dataZoo, newSample, 3, k);
+                printf("Predicted class for new sample with Jaccard Similarity: %d\n", predictedClassJaccard);
+
                 break;
             }
 
             case 5: {
                 if (!dataLoaded) {
-                    printf("Error: No data loaded. Please read from file first.\n");
-                    break;
+                printf("Error: No data loaded. Please read from file first.\n");
+                break;
                 }
-                accuracy = findAccuracy(dataZoo, 1, testData, k);
-                printf("The accuracy for the test data is %.6f\n", accuracy);
+
+                // Compute and display accuracy for each distance metric
+                float accuracyEuclidean = findAccuracy(dataZoo, 1, testData, k);
+                printf("The accuracy for test data using Euclidean Distance is: %.2f%%\n", accuracyEuclidean);
+
+                float accuracyHamming = findAccuracy(dataZoo, 2, testData, k);
+                printf("The accuracy for test data using Hamming Distance is: %.2f%%\n", accuracyHamming);
+
+                float accuracyJaccard = findAccuracy(dataZoo, 3, testData, k);
+                printf("The accuracy for test data using Jaccard Similarity is: %.2f%%\n", accuracyJaccard);
+
                 break;
             }
             case 6: {

@@ -124,27 +124,21 @@ void findKNearestNeighbors(struct Animal dataZoo[NUM_SAMPLES], int newSample[NUM
 }
 
 
-int predictClass (struct Animal dataZoo [NUM_SAMPLES], int newSample [NUM_FEATURES], int whichDistanceFunction, int k){
-
-    int *kNearestNeighbors = (int *)malloc(k * sizeof(int));  // have to do all of this because k told me error
-    if (kNearestNeighbors == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return -1; 
-    }
-
+int predictClass(struct Animal dataZoo[NUM_SAMPLES], int newSample[NUM_FEATURES], int whichDistanceFunction, int k) {
+    int kNearestNeighbors[k];
     int classCounts[NUM_CLASSES] = {0};
 
+    // Find the k-nearest neighbors using the specified distance function
     findKNearestNeighbors(dataZoo, newSample, k, whichDistanceFunction, kNearestNeighbors);
 
+    // Count occurrences of each class in the k-nearest neighbors
     for (int i = 0; i < k; i++) {
         int neighborIndex = kNearestNeighbors[i];
         int neighborClass = dataZoo[neighborIndex].classLabel;
-        classCounts[neighborClass - 1]++;
+        classCounts[neighborClass - 1]++;  // Class labels are 1-based, array is 0-based
     }
 
-    free(kNearestNeighbors); // free what i did above
-
-    // Find the class with the highest count
+    // Determine the most frequent class label
     int predictedClass = 1;
     int maxCount = classCounts[0];
     for (int i = 1; i < NUM_CLASSES; i++) {
@@ -152,22 +146,22 @@ int predictClass (struct Animal dataZoo [NUM_SAMPLES], int newSample [NUM_FEATUR
             maxCount = classCounts[i];
             predictedClass = i + 1;
         } else if (classCounts[i] == maxCount && (i + 1) < predictedClass) {
-            predictedClass = i + 1; // Tie-breaker: choose the smaller class label
+            predictedClass = i + 1;  // Tie-breaker: choose the smaller class label
         }
     }
 
     return predictedClass;
 }
 
-float findAccuracy(struct Animal dataZoo[NUM_SAMPLES],int whichDistanceFunction, struct Animal testData[NUM_TEST_DATA], int k) {
+float findAccuracy(struct Animal dataZoo[NUM_SAMPLES], int whichDistanceFunction, struct Animal testData[NUM_TEST_DATA], int k) {
     int correctPredictions = 0;
 
-    // Loop through each test sample
     for (int i = 0; i < NUM_TEST_DATA; i++) {
         int predictedClass = predictClass(dataZoo, testData[i].features, whichDistanceFunction, k);
         if (predictedClass == testData[i].classLabel) {
             correctPredictions++;
         }
     }
-    return (float)correctPredictions / NUM_TEST_DATA; //simple return for the accuracy value
+
+    return ((float)correctPredictions / NUM_TEST_DATA) * 100.0; // Accuracy as a percentage
 }
