@@ -1,138 +1,128 @@
 #include "givenA1.h"
 
-int readFromFile (char fName [30], struct Animal dataZoo [NUM_SAMPLES]){
-
-    FILE *file = fopen(fName, "r");
+int readFromFile(char *filename, Animal dataZoo[NUM_SAMPLES]) {
+    FILE *file = fopen(filename, "r");
     if (!file) {
-        printf("Error: Could not open file %s\n", fName);
-        return -1; 
+        printf("Error: Could not open file %s\n", filename);
+        return 0; // Return 0 to indicate no records were loaded
     }
 
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        char line[256];
-        if (!fgets(line, sizeof(line), file)) {
-            printf("Error: Insufficient data in file\n");
-            fclose(file);
-            return -1;
-        }
+    int count = 0; // Track number of records loaded
 
-    char *token = strtok(line, " "); //strtok splits strings into tokens
-        strncpy(dataZoo[i].animalName, token, MAX_LENGTH_ANIMAL_NAME);
-        dataZoo[i].animalName[MAX_LENGTH_ANIMAL_NAME - 1] = '\0';
-
-    for (int j = 0; j < NUM_FEATURES; j++) {
-            token = strtok(NULL, " ");   
-            if (token == NULL) {
-                printf("Error: Missing features in line %d\n", i + 1);
+    printf("\nReading data from %s...\n", filename);
+    
+    while (count < NUM_SAMPLES && fscanf(file, "%s", dataZoo[count].animalName) == 1) {
+        for (int i = 0; i < NUM_FEATURES; i++) {
+            if (fscanf(file, "%d", &dataZoo[count].features[i]) != 1) {
+                printf("Error: Unexpected file format at record %d\n", count + 1);
                 fclose(file);
-                return -1;
+                return count; // Return the number of successfully loaded records
             }
-            dataZoo[i].features[j] = atoi(token);
+        }
+        if (fscanf(file, "%d", &dataZoo[count].classLabel) != 1) {
+            printf("Error: Missing class label at record %d\n", count + 1);
+            fclose(file);
+            return count;
         }
 
-        token = strtok(NULL, " ");
-        if (token == NULL) {
-            printf("Error: Missing class label in line %d\n", i + 1);
-            fclose(file);
-            return -1;
+        // Print each record as it is read
+        printf("%s ", dataZoo[count].animalName);
+        for (int i = 0; i < NUM_FEATURES; i++) {
+            printf("%d ", dataZoo[count].features[i]);
         }
-        dataZoo[i].classLabel = atoi(token);
+        printf("%d\n", dataZoo[count].classLabel);
+
+        count++; // Increment the record count
     }
 
     fclose(file);
-    return 1; 
+    printf("\nSuccessfully loaded %d records from %s.\n", count, filename);
+    return count; // Return the number of records loaded
 }
 
 void distanceFunctions (int vector1 [NUM_FEATURES],int vector2 [NUM_FEATURES], float * euclideanDistance, int * hammingDistance, float * jaccardSimilarity){
 
-    float sumOfSquares = 0.0; // For Euclidean Distance
-    int hammingCount = 0;    // For Hamming Distance
-    int onesInBoth = 0;      // For Jaccard Similarity numerator
-    int totalFeatures = 0;   // For Jaccard Similarity denominator
+    int i;
+    float sumSquares = 0;
+    int hammingCount = 0;
+    int intersection = 0;
+    int unionCount = 0;
 
-    for (int i = 0; i < NUM_FEATURES; i++) {
-        // Compute Euclidean Distance 
-        float difference = vector1[i] - vector2[i];
-        sumOfSquares += difference * difference;
+    // Iterate over the feature vectors
+    for (i = 0; i < NUM_FEATURES; i++) {
+        // Euclidean Distance Calculation
+        float diff = vector1[i] - vector2[i];
+        sumSquares += diff * diff;
 
-        // Compute Hamming Distance
+        // Hamming Distance Calculation
         if (vector1[i] != vector2[i]) {
             hammingCount++;
         }
 
-        // Compute Jaccard Similarity
-        if (vector1[i] == 1 && vector2[i] == 1) {
-            onesInBoth++;
+        // Jaccard Similarity Calculation
+        if (vector1[i] == 1 || vector2[i] == 1) {
+            unionCount++;
         }
-        if (vector1[i] != 0 || vector2[i] != 0) {
-            totalFeatures++;
+        if (vector1[i] == 1 && vector2[i] == 1) {
+            intersection++;
         }
     }
 
-    *euclideanDistance = sqrt(sumOfSquares);  //final compute of the 2 distances and jaccard similarity 
+    // Compute final values
+    *euclideanDistance = sqrt(sumSquares);
     *hammingDistance = hammingCount;
-    if (totalFeatures == 0) {
-        *jaccardSimilarity = 0.0;
-    } else {
-        *jaccardSimilarity = (float)onesInBoth / totalFeatures;
-    }
+    *jaccardSimilarity = (unionCount == 0) ? 0 : (float) intersection / unionCount;
 
 }
-void findKNearestNeighbors (struct Animal dataZoo [NUM_SAMPLES], int newSample [NUM_FEATURES], int k, int whichDistanceFunction, int kNearestNeighbors [NUM_SAMPLES]){
-
+void findKNearestNeighbors(struct Animal dataZoo[NUM_SAMPLES], int newSample[NUM_FEATURES], int k, int whichDistanceFunction, int kNearestNeighbors[NUM_SAMPLES]) {
     float distances[NUM_SAMPLES];
     int indices[NUM_SAMPLES];
 
-     for (int i = 0; i < NUM_SAMPLES; i++) {
+    // Compute distances for each sample in the dataset
+    for (int i = 0; i < NUM_SAMPLES; i++) {
         float euclideanDistance = 0.0;
         int hammingDistance = 0;
         float jaccardSimilarity = 0.0;
 
-        // Use the distanceFunctions to calculate distances
         distanceFunctions(newSample, dataZoo[i].features, &euclideanDistance, &hammingDistance, &jaccardSimilarity);
 
-        // Store the selected distance measure based on whichDistanceFunction
         if (whichDistanceFunction == 1) {
             distances[i] = euclideanDistance;
         } else if (whichDistanceFunction == 2) {
             distances[i] = hammingDistance;
-        } else if (whichDistanceFunction == 3) {
+        } else {
             distances[i] = jaccardSimilarity;
         }
-        indices[i] = i; // Keep track of indices
+        indices[i] = i;
     }
 
+    // Sort distances in ascending order for Euclidean & Hamming, descending for Jaccard
     for (int i = 0; i < NUM_SAMPLES - 1; i++) {
         for (int j = 0; j < NUM_SAMPLES - i - 1; j++) {
             int swap = 0;
-
-            if (whichDistanceFunction == 3) { // For Jaccard, sort in increasing order
-                if (distances[j] > distances[j + 1]) {
-                    swap = 1;
-                }
-            } else { // For Euclidean and Hamming, sort in decreasing order
-                if (distances[j] < distances[j + 1]) {
-                    swap = 1;
-                }
+            if ((whichDistanceFunction == 3 && distances[j] < distances[j + 1]) ||
+                (whichDistanceFunction != 3 && distances[j] > distances[j + 1])) {
+                swap = 1;
             }
 
             if (swap) {
-                // Swap distances
-                float tempDistance = distances[j];
+                float tempDist = distances[j];
                 distances[j] = distances[j + 1];
-                distances[j + 1] = tempDistance;
+                distances[j + 1] = tempDist;
 
-                // Swap indices
-                int tempIndex = indices[j];
+                int tempIdx = indices[j];
                 indices[j] = indices[j + 1];
-                indices[j + 1] = tempIndex;
+                indices[j + 1] = tempIdx;
             }
         }
     }
+
+    // Store the top k nearest neighbors
     for (int i = 0; i < k; i++) {
         kNearestNeighbors[i] = indices[i];
     }
 }
+
 
 int predictClass (struct Animal dataZoo [NUM_SAMPLES], int newSample [NUM_FEATURES], int whichDistanceFunction, int k){
 
