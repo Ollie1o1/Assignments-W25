@@ -43,13 +43,12 @@ int readFromFile(char *filename, Animal dataZoo[NUM_SAMPLES]) {
 
 void distanceFunctions (int vector1 [NUM_FEATURES],int vector2 [NUM_FEATURES], float * euclideanDistance, int * hammingDistance, float * jaccardSimilarity){
 
-    int i;
+   int i;
     float sumSquares = 0;
     int hammingCount = 0;
     int intersection = 0;
     int unionCount = 0;
 
-    // Iterate over the feature vectors
     for (i = 0; i < NUM_FEATURES; i++) {
         // Euclidean Distance Calculation
         float diff = vector1[i] - vector2[i];
@@ -60,7 +59,7 @@ void distanceFunctions (int vector1 [NUM_FEATURES],int vector2 [NUM_FEATURES], f
             hammingCount++;
         }
 
-        // Jaccard Similarity Calculation
+        // Jaccard Similarity Calculation (Fix: Exclude 0-0 matches from union)
         if (vector1[i] == 1 || vector2[i] == 1) {
             unionCount++;
         }
