@@ -158,22 +158,24 @@ int predictClass(struct Animal dataZoo[NUM_SAMPLES], int newSample[NUM_FEATURES]
 float findAccuracy(struct Animal dataZoo[NUM_SAMPLES], int whichDistanceFunction, struct Animal testData[NUM_TEST_DATA], int k) {
     int correctPredictions = 0;
 
-    printf("\nCalculating accuracy for distance function %d with k = %d...\n", whichDistanceFunction, k);
-
     for (int i = 0; i < NUM_TEST_DATA; i++) {
         int predictedClass = predictClass(dataZoo, testData[i].features, whichDistanceFunction, k);
-
-        // Debugging: Print predicted vs actual class
-        printf("Test Sample %d - Predicted: %d, Actual: %d\n", i, predictedClass, testData[i].classLabel);
-
+        
+        // Print all predicted class labels in one line
+        printf("%d ", predictedClass);
+        
         if (predictedClass == testData[i].classLabel) {
             correctPredictions++;
         }
     }
-
-    float accuracy = ((float)correctPredictions / NUM_TEST_DATA) * 100.0;
-    printf("Correct predictions: %d/%d\n", correctPredictions, NUM_TEST_DATA);
-    return accuracy; // Return accuracy as a percentage
+    
+    printf("\n%d\n", correctPredictions);
+    printf("%d\n", NUM_TEST_DATA);
+    
+    float accuracy = ((float)correctPredictions / NUM_TEST_DATA);
+    printf("The accuracy for the test data is %f\n", accuracy);
+    
+    return accuracy;
 }
 
 int readTestData(char *filename, struct Animal testData[NUM_TEST_DATA]) {
