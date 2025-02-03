@@ -1,6 +1,4 @@
 #include "givenA1.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "helper.h"
 
 int dataLoaded = 0;  // Flag to track if data is loaded
@@ -124,6 +122,12 @@ int main() {
                 printf("Error: No data loaded. Please read from file first.\n");
                 break;
                 }
+                // Read test data from testData.csv
+                int testRecords = readTestData("testData.csv", testData);
+                if (testRecords == 0) {
+                printf("Error: No test data loaded. Accuracy cannot be computed.\n");
+                break;
+                }
 
                 // Compute and display accuracy for each distance metric
                 float accuracyEuclidean = findAccuracy(dataZoo, 1, testData, k);
@@ -131,7 +135,7 @@ int main() {
 
                 float accuracyHamming = findAccuracy(dataZoo, 2, testData, k);
                 printf("The accuracy for test data using Hamming Distance is: %.2f%%\n", accuracyHamming);
-
+    
                 float accuracyJaccard = findAccuracy(dataZoo, 3, testData, k);
                 printf("The accuracy for test data using Jaccard Similarity is: %.2f%%\n", accuracyJaccard);
 

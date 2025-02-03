@@ -1,4 +1,5 @@
 #include "givenA1.h"
+#include "helper.h"
 
 int readFromFile(char *filename, Animal dataZoo[NUM_SAMPLES]) {
     FILE *file = fopen(filename, "r");
@@ -100,9 +101,10 @@ void findKNearestNeighbors(struct Animal dataZoo[NUM_SAMPLES], int newSample[NUM
     for (int i = 0; i < NUM_SAMPLES - 1; i++) {
         for (int j = 0; j < NUM_SAMPLES - i - 1; j++) {
             int swap = 0;
-            if ((whichDistanceFunction == 3 && distances[j] < distances[j + 1]) ||
-                (whichDistanceFunction != 3 && distances[j] > distances[j + 1])) {
-                swap = 1;
+            if ((whichDistanceFunction == 1 || whichDistanceFunction == 2) && distances[j] > distances[j + 1]) {
+            swap = 1;  // Ascending for Euclidean & Hamming
+            } else if (whichDistanceFunction == 3 && distances[j] < distances[j + 1]) {  //first change to solve 0 percent accuracy problem
+            swap = 1;  // Descending for Jaccard
             }
 
             if (swap) {
@@ -156,12 +158,68 @@ int predictClass(struct Animal dataZoo[NUM_SAMPLES], int newSample[NUM_FEATURES]
 float findAccuracy(struct Animal dataZoo[NUM_SAMPLES], int whichDistanceFunction, struct Animal testData[NUM_TEST_DATA], int k) {
     int correctPredictions = 0;
 
+    printf("\nCalculating accuracy for distance function %d with k = %d...\n", whichDistanceFunction, k);
+
     for (int i = 0; i < NUM_TEST_DATA; i++) {
         int predictedClass = predictClass(dataZoo, testData[i].features, whichDistanceFunction, k);
+
+        // Debugging: Print predicted vs actual class
+        printf("Test Sample %d - Predicted: %d, Actual: %d\n", i, predictedClass, testData[i].classLabel);
+
         if (predictedClass == testData[i].classLabel) {
             correctPredictions++;
         }
     }
 
-    return ((float)correctPredictions / NUM_TEST_DATA) * 100.0; // Accuracy as a percentage
+    float accuracy = ((float)correctPredictions / NUM_TEST_DATA) * 100.0;
+    printf("Correct predictions: %d/%d\n", correctPredictions, NUM_TEST_DATA);
+    return accuracy; // Return accuracy as a percentage
+}
+
+int readTestData(char *filename, struct Animal testData[NUM_TEST_DATA]) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: Could not open file %s\n", filename);
+        return 0; // Return 0 to indicate failure
+    }
+
+    int count = 0;
+    char line[256];
+
+    printf("\nReading test data from %s...\n", filename);
+
+    while (count < NUM_TEST_DATA && fgets(line, sizeof(line), file)) {
+        char *token = strtok(line, ",");
+        if (token == NULL) continue;
+
+        strncpy(testData[count].animalName, token, MAX_LENGTH_ANIMAL_NAME);
+
+        // Read features
+        for (int i = 0; i < NUM_FEATURES; i++) {
+            token = strtok(NULL, ",");
+            if (token == NULL) {
+                printf("Error: Incorrect test data format at record %d\n", count + 1);
+                fclose(file);
+                return count;
+            }
+            testData[count].features[i] = atoi(token);
+        }
+
+        // Read class label
+        token = strtok(NULL, ",");
+        if (token == NULL) {
+            printf("Error: Missing class label at record %d\n", count + 1);
+            fclose(file);
+            return count;
+        }
+        testData[count].classLabel = atoi(token);
+
+        // Print loaded test data
+        printf("Test %d: %s - Class: %d\n", count, testData[count].animalName, testData[count].classLabel);
+        count++;
+    }
+
+    fclose(file);
+    printf("\nSuccessfully loaded %d test records from %s.\n", count, filename);
+    return count;
 }
